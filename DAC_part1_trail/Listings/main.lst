@@ -1,0 +1,89 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              05/03/2025 00:56:13 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.exe main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <at89c5131.h>
+   2          #include "mcp49211.h"
+   3          #include "mcp3008.h"
+   4          
+   5          
+   6          #define N 256                   // LUT resolution
+   7          #define DAC_MAX 4095            // 12-bit DAC max
+   8          
+   9          // 256-point cosine LUT, values scaled from 0–4095
+  10          code unsigned int cos_lut[N] = {
+  11            2048,2098,2148,2198,2248,2298,2348,2398,2447,2497,2547,2596,2645,2694,2743,2791,
+  12            2840,2888,2936,2983,3030,3077,3123,3169,3215,3260,3304,3348,3392,3435,3477,3519,
+  13            3560,3600,3640,3679,3718,3755,3792,3828,3863,3898,3931,3964,3996,4027,4057,4086,
+  14            4115,4142,4169,4194,4219,4242,4265,4286,4307,4326,4345,4362,4378,4393,4407,4420,
+  15            4431,4442,4451,4459,4466,4472,4476,4480,4482,4483,4482,4480,4476,4472,4466,4459,
+  16            4451,4442,4431,4420,4407,4393,4378,4362,4345,4326,4307,4286,4265,4242,4219,4194,
+  17            4169,4142,4115,4086,4057,4027,3996,3964,3931,3898,3863,3828,3792,3755,3718,3679,
+  18            3640,3600,3560,3519,3477,3435,3392,3348,3304,3260,3215,3169,3123,3077,3030,2983,
+  19            2936,2888,2840,2791,2743,2694,2645,2596,2547,2497,2447,2398,2348,2298,2248,2198,
+  20            2148,2098,2048,1998,1948,1898,1848,1798,1748,1698,1649,1599,1549,1500,1451,1402,
+  21            1353,1305,1256,1208,1160,1113,1066,1019, 973, 927, 881, 836, 792, 748, 704, 661,
+  22             619, 577, 536, 496, 456, 417, 378, 341, 304, 268, 233, 198, 165, 132, 100,  69,
+  23              39,  10,   0,   0,   0,   0,   0,  10,  39,  69, 100, 132, 165, 198, 233, 268,
+  24             304, 341, 378, 417, 456, 496, 536, 577, 619, 661, 704, 748, 792, 836, 881, 927,
+  25             973,1019,1066,1113,1160,1208,1256,1305,1353,1402,1451,1500,1549,1599,1649,1698,
+  26            1748,1798,1848,1898,1948,1998
+  27          };
+  28          
+  29          void delay_us(unsigned int us) {
+  30   1        unsigned int i;
+  31   1        while(us--) {
+  32   2          for(i = 0; i < 12; i++);
+  33   2        }
+  34   1      }
+  35          
+  36          void main(void)
+  37          {
+  38   1        unsigned char phase1 = 0;    // Phase accumulator for f1 (4.1kHz)
+  39   1        unsigned char phase2 = 0;    // Phase accumulator for f2 (4.7kHz)
+  40   1        unsigned char step1 = 11;    // 256 * 4100 / 100000 ˜ 10.5 ? round to 11
+  41   1        unsigned char step2 = 12;    // 256 * 4700 / 100000 ˜ 12.0
+  42   1      
+  43   1        unsigned int val1, val2, out_val;
+  44   1        unsigned int adc_data=0;
+  45   1      
+  46   1        spi_init();
+  47   1        dac_init();
+  48   1        adc_init();
+  49   1      
+  50   1        while(1) {
+  51   2          unsigned int x;
+  52   2          x = adc(3);
+  53   2          val1 = cos_lut[phase1];
+  54   2          val2 = cos_lut[phase2];
+C51 COMPILER V9.60.7.0   MAIN                                                              05/03/2025 00:56:13 PAGE 2   
+
+  55   2          out_val = (val1 + val2) / 2;
+  56   2          dac_write(out_val);
+  57   2      
+  58   2          phase1 += step1;
+  59   2          phase2 += step2;
+  60   2      
+  61   2          delay_us(10);  // 100kHz sample rate
+  62   2        }
+  63   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    407    ----
+   CONSTANT SIZE    =    512    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1      28
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
